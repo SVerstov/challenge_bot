@@ -1,10 +1,10 @@
-from telegram_bot.utils import get_telebot
-from telegram_bot.keyboards.test_keyboard import test_kb
+from tgbot.utils import get_telebot
+
 
 
 def send_help_info(user_id: int):
     bot = get_telebot()
-    bot.send_message(user_id, "I'll help you... later",  reply_markup=test_kb)
+    bot.send_message(user_id, "I'll help you... later")
 
 
 def send_text(user_id: int, text: str, reply_markup=None):

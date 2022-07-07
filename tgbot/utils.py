@@ -3,11 +3,15 @@ import os
 import telebot
 
 from server.models import Users
+from telebot.storage import StateMemoryStorage
+
+API_TOKEN = os.getenv('TG_API_TOKEN')
+state_storage = StateMemoryStorage()
+Bot = telebot.TeleBot(API_TOKEN, state_storage=state_storage, parse_mode=None)
 
 
 def get_telebot():
-    API_TOKEN = os.getenv('TG_API_TOKEN')
-    return telebot.TeleBot(API_TOKEN, parse_mode=None)
+    return Bot
 
 
 def get_user_from_telegram(data) -> Users:
@@ -19,8 +23,8 @@ def get_user_from_telegram(data) -> Users:
         last_name = data['message']['from'].get('last_name')
         language_code = data['message']['from'].get('language_code')
         user = Users.objects.create(telegram_id=telegram_id,
-                                   username=username,
-                                   first_name=first_name,
-                                   last_name=last_name,
-                                   language_code=language_code)
+                                    username=username,
+                                    first_name=first_name,
+                                    last_name=last_name,
+                                    language_code=language_code)
     return user

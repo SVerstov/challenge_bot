@@ -21,7 +21,7 @@ class Exercise(models.Model):
         ('distance', 'расстояние'),
     ]
 
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     created_by = models.ForeignKey('Users', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     description = models.TextField(blank=True)
@@ -32,10 +32,10 @@ class Exercise(models.Model):
 
 
 class Challenges(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30)
     description = models.TextField(blank=True)
-    photo_id = models.TextField(blank=True)  # id телеграм файла
+    photo_id = models.CharField(max_length=256, blank=True)  # id телеграм файла
     duration = models.IntegerField(default=30)
     created_by = models.ForeignKey('Users', on_delete=models.CASCADE)
     exercise_set = models.TextField()
@@ -44,8 +44,9 @@ class Challenges(models.Model):
         return self.name
 
 
-class CurrentChallenge():
-    launched_by = models.ForeignKey('User', on_delete=models.CASCADE, primary_key=True)
+
+class CurrentChallenge(models.Model):
+    launched_by = models.OneToOneField('Users', on_delete=models.CASCADE, primary_key=True)
     challenge = models.ForeignKey('Challenges', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     date_start = models.DateField(auto_now_add=True)

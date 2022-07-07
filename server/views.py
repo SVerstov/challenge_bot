@@ -1,13 +1,30 @@
 import json
-
-from django.http import JsonResponse
+import telebot
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from telegram_bot.dispatcher import dispatch
+from tgbot.utils import get_telebot
+# todo найти место это строке =)
+from tgbot import handlers
+
+bot = get_telebot()
+
 
 @csrf_exempt
 def telegram_callback(request):
-    data = json.loads(request.body)
-    dispatch(data)
-    return JsonResponse({})
+    # data = json.loads(request.body)
+    # dispatch(data)
+    # return JsonResponse({})
+
+    if request.META['CONTENT_TYPE'] == 'application/json':
+
+        json_data = request.body.decode('utf-8')
+        update = telebot.types.Update.de_json(json_data)
+        bot.process_new_updates([update])
+
+        return HttpResponse("")
+    else:
+        raise PermissionDenied
+
 
