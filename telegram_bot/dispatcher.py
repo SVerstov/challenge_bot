@@ -1,28 +1,30 @@
-import telebot
-import os
+from telegram_bot.services.info_services import send_text, send_help_info
+from telegram_bot.utils import get_user_from_telegram, get_telebot
+from telegram_bot.keyboards.test_keyboard import inline_kb
 
-from server.models import User
+bot = get_telebot()
 
 
-def get_telebot():
-    API_TOKEN = os.getenv('TG_API_TOKEN')
-    return telebot.TeleBot(API_TOKEN, parse_mode=None)
+
+
 
 
 def dispatch(data: dict) -> None:
+    # user = get_user_from_telegram(data, 'message')
+    # todo ?? зачем при каждом сообщении делать запрос в бд?
+
     if 'message' in data:
-        user = get_user_from_telegram(data, 'message')
+        telegram_id = data['message']['from']['id']
         if text := data['message'].get('text', None):
-            if text in ['/start', '/hello']:
-                bot = get_telebot()
-                bot.send_message(user.user_id, 'hello')
-        try:
-            pass
-        except Exception as e:
-            print(e)
+
+            match text:
+                case '/start':
+                    get_user_from_telegram(data)
+                    send_text(telegram_id, 'Стартуууууем!', reply_markup=inline_kb)
+                case '/help':
+                    send_help_info(telegram_id)
+
+                case _:
+                    send_text(telegram_id, 'Непонятная команда')
 
 
-def get_user_from_telegram(data, message_type) -> User:
-    if message_type == 'message':
-        user, created = User.objects.get_or_create(user_id=data['message']['from']['id'], username='', first_name='', last_name='', language_code='')
-        return user

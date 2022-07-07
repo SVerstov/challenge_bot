@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from server.views import telegram_callback
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('telegram/callback', telegram_callback),
 ]

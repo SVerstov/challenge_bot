@@ -1,8 +1,13 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
+import json
 
-from . import models
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-# class NewUser(APIView):
-def post(self, *args, **kwargs):
-    pass
+from telegram_bot.dispatcher import dispatch
+
+@csrf_exempt
+def telegram_callback(request):
+    data = json.loads(request.body)
+    dispatch(data)
+    return JsonResponse({})
+
