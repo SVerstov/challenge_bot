@@ -24,13 +24,14 @@ class Users(models.Model):
 class Exercise(models.Model):
     MEASUREMENTS = [
         ('numbers', 'количество'),
-        ('distance', 'расстояние'),
+        ('distance', 'расстояние, Км'),
         ('minutes', 'минуты'),
     ]
 
     id = models.AutoField(primary_key=True)
     creator = models.ForeignKey('Users', on_delete=models.DO_NOTHING, blank=True, null=True)
     name = models.CharField(max_length=30)
+    for_all = models.BooleanField(default=False)
     description = models.TextField(blank=True)
     measurement = models.CharField(default='number', max_length=30, choices=MEASUREMENTS)
 
@@ -41,6 +42,8 @@ class Exercise(models.Model):
 class Challenges(models.Model):
     id = models.AutoField(primary_key=True)
     creator = models.ForeignKey('Users', on_delete=models.DO_NOTHING, blank=True, null=True)
+    main_copy = models.BooleanField(default=False)
+    for_all = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
     description = models.TextField(blank=True)
     photo_id = models.CharField(max_length=256, blank=True)
@@ -53,9 +56,9 @@ class Challenges(models.Model):
 class CurrentChallenge(models.Model):
     id = models.AutoField(primary_key=True)
     challenge = models.ForeignKey('Challenges', on_delete=models.DO_NOTHING, null=True)
-    exercise_id = models.ManyToManyField('Exercise')
+    exercise = models.ForeignKey('Exercise', on_delete=models.DO_NOTHING, null=True)
     exercises_amount = models.PositiveIntegerField()
-    exercises_done = models.PositiveIntegerField(blank=True)
+    exercises_done = models.PositiveIntegerField(blank=True, default=0)
 
     def __str__(self):
-        return self.challenge_id
+        return str(self.challenge_id)

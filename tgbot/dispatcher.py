@@ -1,14 +1,13 @@
 from tgbot.handlers.info_services import send_text, send_help_info
-from tgbot.utils import get_user, Bot
-
-
+from tgbot.utils import get_or_save_user
+from tgbot.create_bot import bot
 
 from telebot.handler_backends import State, StatesGroup  # States
 
 
 
 def test(message):
-    Bot.reply_to(message, "Test is ok!")
+    bot.reply_to(message, "Test is ok!")
 
 
 
@@ -36,7 +35,7 @@ def dispatch(data: dict) -> None:
         if text:
             match text:
                 case '/start':
-                    get_user(data)
+                    get_or_save_user(data)
                     send_text(telegram_id, 'Стартуууууем!')
                 case '/help':
                     send_help_info(telegram_id)

@@ -1,16 +1,9 @@
-import os
-
-from telebot import TeleBot, types
-from telebot.storage import StateMemoryStorage
+from telebot import types
 
 from server.models import Users
 
-API_TOKEN = os.getenv('TG_API_TOKEN')
-state_storage = StateMemoryStorage()
-Bot = TeleBot(API_TOKEN, state_storage=state_storage, parse_mode=None)
 
-
-def get_user(message: types.Message) -> Users:
+def get_or_save_user(message: types.Message) -> Users:
     telegram_id = message.from_user.id
     user = Users.objects.filter(telegram_id=telegram_id).first()
     if user is None:
