@@ -1,5 +1,3 @@
-from typing import Dict
-
 from tgbot.utils import get_or_save_user
 from tgbot.create_bot import bot, set_up_commands
 

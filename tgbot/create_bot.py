@@ -24,7 +24,7 @@ list_of_commands: Dict[str, Dict[str, str]] = {
     'en': {
         'start': 'Start django bot 🚀',
         'stats': 'Statistics of bot 📊',
-        # todo заполнить
+        # TODO заполнить
     },
     'es': {
         'start': 'Iniciar el bot de django 🚀',

@@ -30,7 +30,7 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(' ')
 # Application definition
-# AUTH_USER_MODEL = 'server.Users'
+# AUTH_USER_MODEL = 'server.User'
 
 logging.basicConfig(level=logging.ERROR)
 
