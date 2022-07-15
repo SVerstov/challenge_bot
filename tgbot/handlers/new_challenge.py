@@ -65,25 +65,22 @@ def save_exercise(message: types.Message):
     if message.text.isdigit() and int(message.text) >= 0:
         with bot.retrieve_data(message.chat.id) as data:
             exercise: ExercisesAll = data['current_exercise']
-            data['added_exercises'][exercise.id] = (
-                exercise.name,
-                int(message.text),
-                exercise.measurement
-            )
+            data['added_exercises'][exercise.id] = (exercise,int(message.text))
+
             if int(message.text) == 0:
                 del data['added_exercises'][exercise.id]
 
         # make a clear string for response
         if data['added_exercises']:
             exercises_info = '\n'.join(
-                [f'*{x[0]}*:  {str(x[1])} {str(x[2])}' for x in data['added_exercises'].values()]) \
-                             + f'\n Длительность челленджа: {data["duration"]} дней'
+                [f'*{x[0].name}*:  {x[1]} {(x[0].get_measurement_display())}' for x in data['added_exercises'].values()]) \
+                             + f'\n\n Длительность челленджа: {data["duration"]} дней'
 
         else:
             exercises_info = 'Нет упражнений 🤕'
 
         bot.send_message(message.chat.id,
-                         f"Уже выбраны следующие упражнения:\n{exercises_info}",
+                         f"Уже выбраны следующие упражнения:\n\n{exercises_info}",
                          reply_markup=offer_to_finish)
         bot.set_state(message.chat.id, NewChallengeState.save_or_add)
     else:
@@ -96,12 +93,13 @@ def exercise_chosen(call: types.CallbackQuery):
     if call.data == 'add_exercise':
         kb = get_exercises_kb(call.message.chat.id)
         bot.send_message(call.message.chat.id, "Выберите упражнение из списка:", reply_markup=kb)
+        bot.set_state(call.message.chat.id, NewChallengeState.amount_exercise)
     elif call.data == 'finish':
         with bot.retrieve_data(call.message.chat.id) as data:
             save_new_challenge(data)
             bot.send_message(call.message.chat.id, f'Новый Челлендж \'{data["name"]}\' сохранён!')
+            bot.delete_state(call.message.chat.id)
     bot.answer_callback_query(call.id)
-    bot.delete_state(call.message.chat.id)
 
 
 def is_positive_integer(text: str) -> bool:
@@ -123,10 +121,10 @@ def save_new_challenge(data: dict):
     )
 
     for exercise_id in data['added_exercises']:
-        name, amount, measurement = data['added_exercises'][exercise_id]
+        exercise = data['added_exercises'][exercise_id][0]
         ExerciseSet.objects.create(
             challenge_id=challenge_obj.id,
-            name=name,
-            amount=amount,
-            measurement=measurement,
+            name=exercise.name,
+            amount=data['added_exercises'][exercise_id][1],
+            measurement=exercise.measurement,
         )

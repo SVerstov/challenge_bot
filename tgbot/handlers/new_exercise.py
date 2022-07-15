@@ -23,7 +23,7 @@ def new_exercise_name(message: types.Message):
 def new_exercise_measurement(message: types.Message):
     bot.send_message(message.chat.id, "Как будем измерять ваше упражнение?", reply_markup=measurement_kb)
     bot.set_state(message.chat.id, AddExerciseState.measurement)
-    bot.add_data(message.chat.id, name=message.text)
+    bot.add_data(message.chat.id, name=message.text.strip())
 
 
 @bot.callback_query_handler(func=lambda call: True, state=AddExerciseState.measurement)

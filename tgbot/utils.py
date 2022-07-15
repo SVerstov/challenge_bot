@@ -1,6 +1,7 @@
 from telebot import types
 
 from server.models import User
+import random
 
 
 def get_or_save_user(message: types.Message) -> User:
@@ -23,3 +24,8 @@ def create_user(message):
                                last_name=last_name,
                                language_code=language_code)
     return user
+
+
+def get_cool_smile():
+    smile_list = '😎 👊🏼 👍🏻 💪 🏋🏼‍♂️ 🤸🏽‍♀️ 🥊 🦾 🤺 ⚔️'
+    return random.choice(smile_list.split())
