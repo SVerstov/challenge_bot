@@ -17,55 +17,65 @@ class NewChallengeState(StatesGroup):
 
 @bot.message_handler(commands=['new_challenge'])
 def set_challenge_name(message: types.Message):
-    bot.send_message(message.chat.id, "Создаём новый спортивный челлендж!\n Введите его название:")
-    bot.set_state(message.from_user.id, NewChallengeState.description)
-    bot.add_data(message.from_user.id, owner=message.from_user.id)
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Создаём новый спортивный челлендж!\n Введите его название:")
+    bot.set_state(chat_id, NewChallengeState.description)
+    bot.add_data(chat_id, owner=chat_id)
+    bot.add_data(chat_id, added_exercises={})
     # TODO проверка-что такое упражнение уже есть =)
 
 
 @bot.message_handler(state=NewChallengeState.description)
 def set_challenge_duration(message: types.Message):
-    bot.send_message(message.chat.id, "Введите описание:")
-    bot.set_state(message.from_user.id, NewChallengeState.duration)
-    bot.add_data(message.from_user.id, name=message.text)
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Введите описание:")
+    bot.set_state(chat_id, NewChallengeState.duration)
+    bot.add_data(chat_id, name=message.text)
 
 
 @bot.message_handler(state=NewChallengeState.duration)
 def set_challenge_description(message: types.Message):
-    bot.send_message(message.chat.id, "Введите продолжительность челленджа (в днях):")
-    bot.set_state(message.from_user.id, NewChallengeState.choose_exercise)
-    bot.add_data(message.from_user.id, description=message.text)
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Введите продолжительность челленджа (в днях):")
+    bot.set_state(chat_id, NewChallengeState.choose_exercise)
+    bot.add_data(chat_id, description=message.text)
 
 
 @bot.message_handler(state=NewChallengeState.choose_exercise)
 def choose_exercise(message: types.Message):
+    chat_id = message.chat.id
     if not is_positive_integer(message.text):
-        bot.send_message(message.chat.id, "Введите положительное число, без букв:")
+        bot.send_message(chat_id, "Введите положительное число, без букв:")
     else:
-        kb = get_exercises_kb(message.chat.id)
-        bot.send_message(message.chat.id, "Выберите упражнение из списка:", reply_markup=kb)
-        bot.set_state(message.chat.id, NewChallengeState.amount_exercise)
-        bot.add_data(message.chat.id, duration=int(message.text))
-        bot.add_data(message.chat.id, added_exercises={})
+        bot.add_data(chat_id, duration=int(message.text))
+        show_exercise_kb(chat_id)
+
+
+def show_exercise_kb(chat_id):
+    kb = get_exercises_kb(chat_id)
+    bot.send_message(chat_id, "Выберите упражнение из списка:", reply_markup=kb)
+    bot.set_state(chat_id, NewChallengeState.amount_exercise)
 
 
 @bot.callback_query_handler(func=lambda c: c.data.isdigit(), state=NewChallengeState.amount_exercise)
 def exercise_chosen(call: types.CallbackQuery):
+    chat_id = call.message.chat.id
     exercise = ExercisesAll.objects.get(pk=int(call.data))
     measurement = exercise.get_measurement_display()
-    bot.add_data(call.message.chat.id, current_exercise=exercise)
-    bot.send_message(call.message.chat.id,
+    bot.add_data(chat_id, current_exercise=exercise)
+    bot.send_message(chat_id,
                      f'Какое количество упражнения \'*{exercise.name}*\' ({measurement}) необходимо сделать?')
-    bot.set_state(call.message.chat.id, NewChallengeState.save_exercise)
+    bot.set_state(chat_id, NewChallengeState.save_exercise)
     bot.answer_callback_query(call.id)
 
 
 @bot.message_handler(state=NewChallengeState.save_exercise)
 def save_exercise(message: types.Message):
+    chat_id = message.chat.id
     if message.text.isdigit() and int(message.text) >= 0:
-        with bot.retrieve_data(message.chat.id) as data:
+        with bot.retrieve_data(chat_id) as data:
             exercise: ExercisesAll = data['current_exercise']
-            data['added_exercises'][exercise.id] = (exercise,int(message.text))
+            data['added_exercises'][exercise.id] = (exercise, int(message.text))
 
             if int(message.text) == 0:
                 del data['added_exercises'][exercise.id]
@@ -73,33 +83,39 @@ def save_exercise(message: types.Message):
         # make a clear string for response
         if data['added_exercises']:
             exercises_info = '\n'.join(
-                [f'*{x[0].name}*:  {x[1]} {(x[0].get_measurement_display())}' for x in data['added_exercises'].values()]) \
-                             + f'\n\n Длительность челленджа: {data["duration"]} дней'
+                [f'*{x[0].name}*:  {x[1]} {(x[0].get_measurement_display())}' for x in
+                 data['added_exercises'].values()]) \
+                             + f'\n\n Длительность челленджа: {data["duration"]} дней' \
+                               f'\n`Чтобы отредактировать упражнение, выберите его повторно.`' \
+                               f'\n`Для удаления упражнения, установите количество равным 0. `'
 
+            bot.send_message(chat_id,
+                             f"Уже выбраны следующие упражнения:\n\n{exercises_info}",
+                             reply_markup=offer_to_finish)
+            bot.set_state(chat_id, NewChallengeState.save_or_add)
         else:
             exercises_info = 'Нет упражнений 🤕'
+            bot.send_message(chat_id, exercises_info)
+            show_exercise_kb(chat_id)
 
-        bot.send_message(message.chat.id,
-                         f"Уже выбраны следующие упражнения:\n\n{exercises_info}",
-                         reply_markup=offer_to_finish)
-        bot.set_state(message.chat.id, NewChallengeState.save_or_add)
+
     else:
-        bot.send_message(message.chat.id, "Введите положительное число, без букв")
+        bot.send_message(chat_id, "Введите положительное число, без букв")
 
 
 @bot.callback_query_handler(func=lambda c: c.data in ['add_exercise', 'finish'],
                             state=NewChallengeState.save_or_add)
 def exercise_chosen(call: types.CallbackQuery):
+    chat_id = call.message.chat.id
     if call.data == 'add_exercise':
-        kb = get_exercises_kb(call.message.chat.id)
-        bot.send_message(call.message.chat.id, "Выберите упражнение из списка:", reply_markup=kb)
-        bot.set_state(call.message.chat.id, NewChallengeState.amount_exercise)
+        bot.answer_callback_query(call.id)
+        show_exercise_kb(chat_id)
     elif call.data == 'finish':
-        with bot.retrieve_data(call.message.chat.id) as data:
+        with bot.retrieve_data(chat_id) as data:
             save_new_challenge(data)
-            bot.send_message(call.message.chat.id, f'Новый Челлендж \'{data["name"]}\' сохранён!')
-            bot.delete_state(call.message.chat.id)
-    bot.answer_callback_query(call.id)
+            bot.send_message(chat_id, f'Новый Челлендж \'{data["name"]}\' сохранён!')
+            bot.answer_callback_query(call.id)
+            bot.delete_state(chat_id)
 
 
 def is_positive_integer(text: str) -> bool:
@@ -109,7 +125,8 @@ def is_positive_integer(text: str) -> bool:
 @bot.message_handler(state=NewChallengeState.save_or_add)
 @bot.message_handler(state=NewChallengeState.amount_exercise)
 def inline_mistake(message: types.Message):
-    bot.send_message(message.from_user.id, 'Ошибка, используйте кнопки!')
+    chat_id = message.chat.id
+    bot.send_message(chat_id, 'Ошибка, используйте кнопки!')
 
 
 def save_new_challenge(data: dict):

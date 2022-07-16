@@ -13,26 +13,29 @@ class AddExerciseState(StatesGroup):
 
 @bot.message_handler(commands=['new_exercise'], state='*')
 def new_exercise_name(message: types.Message):
-    bot.send_message(message.chat.id, "Создаём новое упражнение!\n Введите его название:")
-    bot.set_state(message.from_user.id, AddExerciseState.description)
-    bot.add_data(message.from_user.id, owner_id=message.from_user.id)
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Создаём новое упражнение!\n Введите его название:")
+    bot.set_state(chat_id, AddExerciseState.description)
+    bot.add_data(chat_id, owner_id=chat_id)
     # TODO проверка, что упражнение уже есть
 
 
 @bot.message_handler(state=AddExerciseState.description)
 def new_exercise_measurement(message: types.Message):
-    bot.send_message(message.chat.id, "Как будем измерять ваше упражнение?", reply_markup=measurement_kb)
-    bot.set_state(message.chat.id, AddExerciseState.measurement)
-    bot.add_data(message.chat.id, name=message.text.strip())
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Как будем измерять ваше упражнение?", reply_markup=measurement_kb)
+    bot.set_state(chat_id, AddExerciseState.measurement)
+    bot.add_data(chat_id, name=message.text.strip())
 
 
 @bot.callback_query_handler(func=lambda call: True, state=AddExerciseState.measurement)
 def new_exercise_save(call: types.CallbackQuery):
-    with bot.retrieve_data(call.message.chat.id) as data:
+    chat_id = call.message.chat.id
+    with bot.retrieve_data(chat_id) as data:
         data['measurement'] = call.data
         save_new_exercise(data)
-        bot.send_message(call.message.chat.id, f'Упражнение "{data["name"]}" создано!')
-    bot.delete_state(call.message.chat.id)
+        bot.send_message(chat_id, f'Упражнение "{data["name"]}" создано!')
+    bot.delete_state(chat_id)
     bot.answer_callback_query(call.id)
 
 

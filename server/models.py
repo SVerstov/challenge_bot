@@ -42,28 +42,9 @@ class ExercisesAll(BaseExercise):
     for_all = models.BooleanField(default=False)
 
 
-class Challenges(models.Model):
-    id = models.AutoField(primary_key=True)
-    owner = models.ForeignKey('User', on_delete=models.CASCADE)
-    name = models.CharField(max_length=30)
-    description = models.TextField(blank=True)
-    photo_id = models.CharField(max_length=256, blank=True)
-    duration = models.IntegerField(default=30)
-    for_all = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-
 class ExerciseSet(BaseExercise):
     challenge = models.ForeignKey('Challenges', on_delete=models.CASCADE)
     amount = models.IntegerField()
-
-
-class AcceptedChallenges(Challenges):
-    owner = None
-    for_all = None
-    date_start = models.DateField
 
 
 class AcceptedExerciseSet(BaseExercise):
@@ -72,3 +53,28 @@ class AcceptedExerciseSet(BaseExercise):
     progress = models.FloatField(default=0)
     progress_on_last_day = models.FloatField(default=0)
     last_day = models.DateField(**bn)
+
+
+class BaseChallenges(models.Model):
+    class Meta:
+        abstract = True
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=30)
+    description = models.TextField(blank=True)
+    photo_id = models.CharField(max_length=256, blank=True)
+    duration = models.IntegerField(default=30)
+
+    def __str__(self):
+        return self.name
+
+class Challenges(BaseChallenges):
+    owner = models.ForeignKey('User', on_delete=models.CASCADE)
+
+    for_all = models.BooleanField(default=False)
+
+
+class AcceptedChallenges(BaseChallenges):
+    date_start = models.DateField(auto_now_add=True)
+
+

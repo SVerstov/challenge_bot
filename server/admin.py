@@ -17,12 +17,13 @@ class ChallengesAdmin(admin.ModelAdmin):
 class ExerciseSetAdmin(admin.ModelAdmin):
     pass
 
+
 class AcceptedChallengesAdmin(admin.ModelAdmin):
     pass
 
+
 class AcceptedExerciseSetAdmin(admin.ModelAdmin):
     pass
-
 
 
 admin.site.register(User, UsersAdmin)
