@@ -1,1 +1,1 @@
-a = 22
+from .get_kb import get_markup_kb

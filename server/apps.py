@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 import logging
-from telebot import logger
+import sys
+from telebot import logger as tlogger
 
 
 class ServerConfig(AppConfig):
@@ -10,7 +11,4 @@ class ServerConfig(AppConfig):
     def ready(self):
         super(ServerConfig)
         from tgbot import handlers
-
-        logger.setLevel(logging.DEBUG)
-
 

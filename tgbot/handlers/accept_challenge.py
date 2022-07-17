@@ -8,6 +8,7 @@ from tgbot.utils import get_or_save_user
 from server.models import Challenges, ExerciseSet, AcceptedChallenges, AcceptedExerciseSet
 from django.db.models import Q
 from tgbot.keyboards.all_challenges_kb import get_pick_challenge_kb, reset_kb
+from tgbot.keyboards import get_markup_kb
 
 
 class AcceptChallengeState(StatesGroup):
@@ -27,14 +28,14 @@ def start_challenge(message: types.Message):
         exercise_list = ExerciseSet.objects.all()
 
         for challenge in challenge_list:
-            # challenge: Challenges
-
             exercises = exercise_list.filter(challenge_id=challenge.id)
             exercises_info = ''
+
+            description = '\n' + challenge.description if challenge.description else ''
             for exercise in exercises:
                 exercises_info += f'*{exercise.name}*: {exercise.amount}  {exercise.get_measurement_display()}\n'
             challenge_info = f'*{challenge.name}*' \
-                             f'\n`{challenge.description}`' \
+                             f'`{description}`' \
                              f'\n\n{exercises_info}' \
                              f'\nДлительность челленджа: *{challenge.duration}* дней'
             # todo ДЕНЬ ДНЯ ДНЕЙ - в зависимости от числа
@@ -48,8 +49,8 @@ def cansel_challenge(call: types.CallbackQuery):
     chat_id = call.from_user.id
     user = get_or_save_user(call)
     user.challenge_accepted.delete()
-
-    bot.answer_callback_query(call.id, 'Прогресс сброшен!')
+    bot.answer_callback_query(call.id)
+    bot.send_message(chat_id, 'Прогресс сброшен!')
 
 
 @bot.callback_query_handler(func=lambda c: True, state=AcceptChallengeState.choose)
@@ -69,5 +70,7 @@ def save_accepted_challenge(call: types.CallbackQuery):
         accepted_exercise = AcceptedExerciseSet.objects.create(challenge_id=accepted_challenge.id, **kwargs)
         accepted_exercise.save()
 
+    kb = get_markup_kb('/Учет')
+    bot.send_message(chat_id, '💪 Вызов принят! 💪', reply_markup=kb)
     bot.answer_callback_query(call.id, '>> CHALLENGE ACCEPTED <<')
     bot.delete_state(call.from_user.id)

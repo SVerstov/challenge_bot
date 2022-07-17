@@ -1,5 +1,6 @@
 from telebot import types
 from telebot.types import InlineKeyboardButton as Ibtn
+from tgbot.keyboards import get_markup_kb
 
 from tgbot.create_bot import bot
 
@@ -14,11 +15,10 @@ test_kb.row(
     Ibtn('+5', callback_data='test 5'),
     Ibtn('+10', callback_data='test 10'),
     Ibtn('+100', callback_data='test 100'),
-
 )
 
 
-@bot.message_handler(commands=['test'])
+@bot.message_handler(func=lambda msg: msg.text.startswith('test'))
 def test(message: types.Message):
     for exercise in exercises:
         bot.send_message(message.chat.id, f'*{exercise}*', reply_markup=test_kb)
@@ -29,3 +29,10 @@ def test_call(call: types.CallbackQuery):
     number = float(call.data.split()[1])
     bot.edit_message_text(f'{number:g}', chat_id=call.message.chat.id, message_id=call.message.id, reply_markup=test_kb)
     bot.answer_callback_query(call.id, f'{number:g}')
+
+
+@bot.message_handler(commands=['test_kb'])
+def test(message: types.Message):
+    exercises = ['Подтягивание', 'Отжимания', 'Бег', 'Планка', 'sdfsdf', 'sdfsdfsdf']
+    test_kb = get_markup_kb(*exercises, one_time_kb=True)
+    bot.send_message(message.chat.id, 'Тест клавы', reply_markup=test_kb)

@@ -1,17 +1,23 @@
+import logging
 import os
 from typing import Dict
 
 import telebot.types
-from telebot import StateMemoryStorage, TeleBot, custom_filters
+from telebot import StateMemoryStorage, TeleBot, custom_filters, logger
+
+logger.setLevel(logging.ERROR)  # Outputs debug messages to console.
+
+
+class ExceptionHandler(telebot.ExceptionHandler):
+    def handle(self, exception):
+        logger.error(exception)
+
 
 API_TOKEN = os.getenv('TG_API_TOKEN')
 state_storage = StateMemoryStorage()
-bot = TeleBot(API_TOKEN, state_storage=state_storage, parse_mode='Markdown')
-
+bot = TeleBot(API_TOKEN, state_storage=state_storage, parse_mode='Markdown', exception_handler=ExceptionHandler())
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
-bot.add_custom_filter(custom_filters.IsDigitFilter())
-
 
 list_of_commands: Dict[str, Dict[str, str]] = {
     'ru': {
@@ -45,5 +51,4 @@ def set_up_commands(telegram_id: int, language_code: str) -> None:
     commands = list_of_commands[language_code]
     bot.set_my_commands(
         commands=[telebot.types.BotCommand(cmd, description) for cmd, description in commands.items()],
-        scope=telebot.types.BotCommandScopeChat(telegram_id)
-    )
+        scope=telebot.types.BotCommandScopeChat(telegram_id))

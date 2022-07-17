@@ -2,46 +2,54 @@ from telebot import types
 from telebot.handler_backends import State, StatesGroup
 
 from server.models import ExercisesAll, Challenges, ExerciseSet
-from tgbot.keyboards.user_create_kb import get_exercises_kb, offer_to_finish
+from tgbot.keyboards.user_create_kb import get_exercises_kb, offer_to_finish, miss_description_kb
+from tgbot.keyboards import get_markup_kb
 from tgbot.create_bot import bot
 
 
 class NewChallengeState(StatesGroup):
+    name = State()
     description = State()
     duration = State()
     choose_exercise = State()
-    amount_exercise = State()
     save_exercise = State()
-    save_or_add = State()
+    save_all = State()
 
 
 @bot.message_handler(commands=['new_challenge'])
 def set_challenge_name(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, "Создаём новый спортивный челлендж!\n Введите его название:")
-    bot.set_state(chat_id, NewChallengeState.description)
+    bot.set_state(chat_id, NewChallengeState.name)
     bot.add_data(chat_id, owner=chat_id)
     bot.add_data(chat_id, added_exercises={})
-    # TODO проверка-что такое упражнение уже есть =)
+    # TODO проверка-что такое упражнение уже есть
 
 
-@bot.message_handler(state=NewChallengeState.description)
+@bot.message_handler(state=NewChallengeState.name)
 def set_challenge_duration(message: types.Message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, "Введите описание:")
-    bot.set_state(chat_id, NewChallengeState.duration)
+    bot.send_message(chat_id, "Введите описание или нажмите 'Пропустить'", reply_markup=miss_description_kb)
+    bot.set_state(chat_id, NewChallengeState.description)
     bot.add_data(chat_id, name=message.text)
 
 
-@bot.message_handler(state=NewChallengeState.duration)
+@bot.callback_query_handler(func=lambda c: c.data == 'miss_description', state=NewChallengeState.description)
+def miss_description(call: types.CallbackQuery):
+    call.message.text = ''
+    bot.answer_callback_query(call.id)
+    set_challenge_description(call.message)
+
+
+@bot.message_handler(state=NewChallengeState.description)
 def set_challenge_description(message: types.Message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, "Введите продолжительность челленджа (в днях):")
-    bot.set_state(chat_id, NewChallengeState.choose_exercise)
     bot.add_data(chat_id, description=message.text)
+    bot.send_message(chat_id, "Введите продолжительность челленджа (в днях):")
+    bot.set_state(chat_id, NewChallengeState.duration)
 
 
-@bot.message_handler(state=NewChallengeState.choose_exercise)
+@bot.message_handler(state=NewChallengeState.duration)
 def choose_exercise(message: types.Message):
     chat_id = message.chat.id
     if not is_positive_integer(message.text):
@@ -54,10 +62,10 @@ def choose_exercise(message: types.Message):
 def show_exercise_kb(chat_id):
     kb = get_exercises_kb(chat_id)
     bot.send_message(chat_id, "Выберите упражнение из списка:", reply_markup=kb)
-    bot.set_state(chat_id, NewChallengeState.amount_exercise)
+    bot.set_state(chat_id, NewChallengeState.choose_exercise)
 
 
-@bot.callback_query_handler(func=lambda c: c.data.isdigit(), state=NewChallengeState.amount_exercise)
+@bot.callback_query_handler(func=lambda c: c.data.isdigit(), state=NewChallengeState.choose_exercise)
 def exercise_chosen(call: types.CallbackQuery):
     chat_id = call.message.chat.id
     exercise = ExercisesAll.objects.get(pk=int(call.data))
@@ -90,9 +98,8 @@ def save_exercise(message: types.Message):
                                f'\n`Для удаления упражнения, установите количество равным 0. `'
 
             bot.send_message(chat_id,
-                             f"Уже выбраны следующие упражнения:\n\n{exercises_info}",
-                             reply_markup=offer_to_finish)
-            bot.set_state(chat_id, NewChallengeState.save_or_add)
+                             f"Уже выбраны следующие упражнения:\n\n{exercises_info}", reply_markup=offer_to_finish)
+            bot.set_state(chat_id, NewChallengeState.save_all)
         else:
             exercises_info = 'Нет упражнений 🤕'
             bot.send_message(chat_id, exercises_info)
@@ -103,8 +110,7 @@ def save_exercise(message: types.Message):
         bot.send_message(chat_id, "Введите положительное число, без букв")
 
 
-@bot.callback_query_handler(func=lambda c: c.data in ['add_exercise', 'finish'],
-                            state=NewChallengeState.save_or_add)
+@bot.callback_query_handler(func=lambda c: c.data in ['add_exercise', 'finish'], state=NewChallengeState.save_all)
 def exercise_chosen(call: types.CallbackQuery):
     chat_id = call.message.chat.id
     if call.data == 'add_exercise':
@@ -122,8 +128,8 @@ def is_positive_integer(text: str) -> bool:
     return text.strip().isdigit() and int(text) > 0
 
 
-@bot.message_handler(state=NewChallengeState.save_or_add)
-@bot.message_handler(state=NewChallengeState.amount_exercise)
+@bot.message_handler(state=NewChallengeState.save_all)
+@bot.message_handler(state=NewChallengeState.choose_exercise)
 def inline_mistake(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, 'Ошибка, используйте кнопки!')

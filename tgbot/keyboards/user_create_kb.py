@@ -4,11 +4,9 @@ from telebot.types import KeyboardButton as Btn
 from server.models import ExercisesAll
 from django.db.models import Q
 
-miss_description_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-miss_description_kb.add(
-    Btn('/Пропустить описание'),
-    Btn('/cansel')
-)
+miss_description_kb = types.InlineKeyboardMarkup()
+miss_btn = Ibtn('Пропустить', callback_data='miss_description')
+miss_description_kb.add(miss_btn)
 
 measurement_kb = types.InlineKeyboardMarkup()
 measurement_kb.row(
