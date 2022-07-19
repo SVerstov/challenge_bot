@@ -25,7 +25,7 @@ def show_all_exercises(message: types.Message):
         bot.send_message(chat_id, user.challenge_accepted.name)
         for exercise in exercises:
             kb = get_counter_kb(exercise.id)
-            bot.send_message(chat_id, get_exercise_progress_info(exercise), reply_markup=kb)
+            bot.send_message(chat_id, get_exercise_progress_info(exercise, today=True), reply_markup=kb)
         bot.set_state(chat_id, state=CounterState.counter_on)
         bot.add_data(chat_id, exercises=exercises, timezone=user.time_zone)
 

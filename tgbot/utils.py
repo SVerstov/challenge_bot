@@ -33,14 +33,23 @@ def get_cool_smile():
     return random.choice(smile_list.split())
 
 
-def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = False, percent: bool = False) -> str:
+def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = True, percent: bool = False) -> str:
     info = f'*{exercise.name}:*\n' \
            f' {exercise.progress:g} {exercise.get_measurement_display().lower()} из {exercise.amount}'
     if today:
         info += f' | Сегодня: {exercise.progress_on_last_day: g}'
     if percent:
-        info += f' | Проценты' #todo проценнты
+
+        info += f' | Прогресс: {get_exercise_progress_percentage(exercise, excess=True):g}%'  #
     return info
+
+
+def get_exercise_progress_percentage(exercise: AcceptedExerciseSet, excess=False) -> float:
+    percentage = (exercise.progress / exercise.amount) * 100
+    if not excess:
+        if percentage > 100:
+            percentage = 100
+    return round(percentage, 1)
 
 
 def get_today_date(timezone: int):
