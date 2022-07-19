@@ -1,7 +1,9 @@
+import datetime
+import random
+
 from telebot import types
 
-from server.models import User
-import random
+from server.models import User, AcceptedExerciseSet
 
 
 def get_or_save_user(message: types.Message) -> User:
@@ -29,3 +31,20 @@ def create_user(message):
 def get_cool_smile():
     smile_list = '😎 👊🏼 👍🏻 💪 🏋🏼‍♂️ 🤸🏽‍♀️ 🥊 🦾 🤺 ⚔️'
     return random.choice(smile_list.split())
+
+
+def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = False, percent: bool = False) -> str:
+    info = f'*{exercise.name}:*\n' \
+           f' {exercise.progress:g} {exercise.get_measurement_display().lower()} из {exercise.amount}'
+    if today:
+        info += f' | Сегодня: {exercise.progress_on_last_day: g}'
+    if percent:
+        info += f' | Проценты' #todo проценнты
+    return info
+
+
+def get_today_date(timezone: int):
+    """ :returns current date considering UTC timezone"""
+    offset = datetime.timedelta(hours=timezone)
+    tz = datetime.timezone(offset, name='тест')
+    return datetime.datetime.now(tz=tz).date()

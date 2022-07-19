@@ -4,11 +4,11 @@ from telebot.handler_backends import StatesGroup, State
 
 from tgbot.create_bot import bot
 
-from tgbot.utils import get_or_save_user
+from tgbot.utils import get_or_save_user, get_today_date
 from server.models import Challenges, ExerciseSet, AcceptedChallenges, AcceptedExerciseSet
 from django.db.models import Q
 from tgbot.keyboards.all_challenges_kb import get_pick_challenge_kb, reset_kb
-from tgbot.keyboards import get_markup_kb
+from tgbot.keyboards.counter_kb import counter_stats_kb
 
 
 class AcceptChallengeState(StatesGroup):
@@ -19,6 +19,7 @@ class AcceptChallengeState(StatesGroup):
 def start_challenge(message: types.Message):
     chat_id = message.from_user.id
     user = get_or_save_user(message)
+    bot.set_state(chat_id, AcceptChallengeState.choose)
     if user.challenge_accepted:
         bot.send_message(chat_id,
                          f'У вас уже есть принятый челлендж - *{user.challenge_accepted.name}*',
@@ -41,7 +42,11 @@ def start_challenge(message: types.Message):
             # todo ДЕНЬ ДНЯ ДНЕЙ - в зависимости от числа
             kb = get_pick_challenge_kb(challenge.name, challenge.id)
             bot.send_message(chat_id, challenge_info, reply_markup=kb)
-    bot.set_state(chat_id, AcceptChallengeState.choose)
+        bot.send_message(chat_id,"Ничего не подходит?\n/"
+                                 "Создайте свои упражнения /new_exercise\n"
+                                 "и челленджи /new_challenge", parse_mode='HTML')
+
+
 
 
 @bot.callback_query_handler(func=lambda c: c.data == 'reset_challenge', state=AcceptChallengeState.choose)
@@ -56,12 +61,13 @@ def cansel_challenge(call: types.CallbackQuery):
 @bot.callback_query_handler(func=lambda c: True, state=AcceptChallengeState.choose)
 def save_accepted_challenge(call: types.CallbackQuery):
     chat_id = call.message.chat.id
-    challenge = Challenges.objects.get(pk=int(call.data))
-
-    kwargs = model_to_dict(challenge, exclude=['id', 'owner', 'for_all'])
-    accepted_challenge = AcceptedChallenges.objects.create(**kwargs)
-    accepted_challenge.save()
     user = get_or_save_user(call)
+
+    challenge = Challenges.objects.get(pk=int(call.data))
+    kwargs = model_to_dict(challenge, exclude=['id', 'owner', 'for_all'])
+    date_start = get_today_date(user.time_zone)
+    accepted_challenge = AcceptedChallenges.objects.create(**kwargs, date_start=date_start)
+    accepted_challenge.save()
     user.challenge_accepted = accepted_challenge
     user.save()
 
@@ -70,7 +76,7 @@ def save_accepted_challenge(call: types.CallbackQuery):
         accepted_exercise = AcceptedExerciseSet.objects.create(challenge_id=accepted_challenge.id, **kwargs)
         accepted_exercise.save()
 
-    kb = get_markup_kb('/Учет')
-    bot.send_message(chat_id, '💪 Вызов принят! 💪', reply_markup=kb)
+    bot.send_message(chat_id, '💪 Вызов принят! 💪\n'
+                              'Для учёта используйте команду /counter', reply_markup=counter_stats_kb)
     bot.answer_callback_query(call.id, '>> CHALLENGE ACCEPTED <<')
     bot.delete_state(call.from_user.id)

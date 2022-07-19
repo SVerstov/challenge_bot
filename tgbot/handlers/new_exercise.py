@@ -14,6 +14,7 @@ class AddExerciseState(StatesGroup):
 @bot.message_handler(commands=['new_exercise'], state='*')
 def new_exercise_name(message: types.Message):
     chat_id = message.chat.id
+    bot.reset_data(chat_id)
     bot.send_message(chat_id, "Создаём новое упражнение!\n Введите его название:")
     bot.set_state(chat_id, AddExerciseState.description)
     bot.add_data(chat_id, owner_id=chat_id)
@@ -40,7 +41,7 @@ def new_exercise_save(call: types.CallbackQuery):
 
 
 def save_new_exercise(data: dict):
-    """ data: telegram_id, name, measurement """
+    """ use data: owner_id, name, measurement """
     return ExercisesAll.objects.create(**data)
 
 

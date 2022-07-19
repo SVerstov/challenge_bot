@@ -13,7 +13,7 @@ class User(models.Model):
     challenge_accepted = models.OneToOneField('AcceptedChallenges', **bn, on_delete=models.SET_NULL, default=None)
     is_blocked_bot = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
-    time_zone = models.SmallIntegerField(default=-3)
+    time_zone = models.SmallIntegerField(default=3)
 
     def __str__(self):
         return self.username if self.username else str(self.telegram_id)
@@ -75,6 +75,6 @@ class Challenges(BaseChallenges):
 
 
 class AcceptedChallenges(BaseChallenges):
-    date_start = models.DateField(auto_now_add=True)
+    date_start = models.DateField()
 
 
