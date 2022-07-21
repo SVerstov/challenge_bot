@@ -4,7 +4,6 @@ from telebot.handler_backends import State, StatesGroup
 from server.models import ExercisesAll, Challenges, ExerciseSet
 from tgbot.keyboards.exercises_kb import get_exercises_kb
 from tgbot.keyboards.challenges_kb import miss_description_kb, offer_to_finish
-from tgbot.keyboards import get_markup_kb
 from tgbot.create_bot import bot
 
 
@@ -121,8 +120,7 @@ def exercise_chosen(call: types.CallbackQuery):
         with bot.retrieve_data(chat_id) as data:
             save_new_challenge(data)
             bot.send_message(chat_id, f'Новый Челлендж \'{data["name"]}\' сохранён!')
-            bot.answer_callback_query(call.id)
-            bot.delete_state(chat_id)
+        bot.delete_state(chat_id)
 
 
 def is_positive_integer(text: str) -> bool:
@@ -146,9 +144,12 @@ def save_new_challenge(data: dict):
 
     for exercise_id in data['added_exercises']:
         exercise = data['added_exercises'][exercise_id][0]
+        amount = data['added_exercises'][exercise_id][1]
+        if exercise.measurement == 'minutes':
+            amount *= 60
         ExerciseSet.objects.create(
             challenge_id=challenge_obj.id,
             name=exercise.name,
-            amount=data['added_exercises'][exercise_id][1],
+            amount=amount,
             measurement=exercise.measurement,
         )

@@ -26,7 +26,7 @@ def show_all_exercises_counter(message: types.Message):
         exercises = user.challenge_accepted.acceptedexerciseset_set.all()
         bot.send_message(chat_id, user.challenge_accepted.name)
         for exercise in exercises:
-            kb = get_counter_kb(exercise.id)
+            kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
             bot.send_message(chat_id, get_exercise_progress_info(exercise, today=True), reply_markup=kb)
         bot.set_state(chat_id, state=CounterState.counter_on)
         bot.add_data(chat_id, exercises=exercises, timezone=user.time_zone)
@@ -61,12 +61,10 @@ def accounting(call: types.CallbackQuery):  # todo переоткрытие сч
         except ValueError:
             return
 
-
         timezone = data.get('timezone')
         save_exercise_progress(exercise, delta, timezone=timezone)
 
-
-        kb = get_counter_kb(exercise.id)
+        kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
         try:
             bot.edit_message_text(get_exercise_progress_info(exercise, today=True),
                                   chat_id=call.message.chat.id,
@@ -76,7 +74,6 @@ def accounting(call: types.CallbackQuery):  # todo переоткрытие сч
             # show new counter if edited message is too old
             bot.send_message(chat_id, '🔽🔻🔽🔻🔽🔻Пересоздаю клавиатуру🔻🔽🔻🔽🔻🔽\nПоследнее нажатие было учтено!')
             show_all_exercises_counter(call.message)
-
 
         sign = '+' if delta >= 0 else '-'
         bot.answer_callback_query(call.id, f'{exercise.name} {sign}{delta:g}')

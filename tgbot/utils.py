@@ -31,11 +31,33 @@ def create_user(message):
     return user
 
 
-def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = True, percent: bool = False) -> str:
-    info = f'*{exercise.name}:*\n' \
-           f' {exercise.progress:g} {exercise.get_measurement_display().lower()} из {exercise.amount}'
+def seconds_to_mmss(seconds: int or float) -> str:
+    return str(datetime.timedelta(seconds=int(seconds))).lstrip('0:')
+
+
+def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = True, percent: bool = False, ) -> str:
+    if exercise.measurement == 'minutes':
+        if exercise.progress:
+            progress_info = seconds_to_mmss(exercise.progress)
+        else:
+            progress_info = 0
+        amount_info = str(exercise.amount/60) + ' мин'
+        progress_on_last_day = seconds_to_mmss(exercise.progress_on_last_day)
+
+        info = f'*{exercise.name}:*\n' \
+               f' {progress_info} из {amount_info}'
+
+    else:
+        progress_info = f'{exercise.progress:g}'
+        amount_info = str(exercise.amount)
+        progress_on_last_day = f'{exercise.progress_on_last_day:g}'
+
+        info = f'*{exercise.name}:*\n' \
+               f' {progress_info} {exercise.get_measurement_display().lower()} из {amount_info}'
+
+
     if today:
-        info += f' | Сегодня: {exercise.progress_on_last_day: g}'
+        info += f' | Сегодня: {progress_on_last_day}'
     if percent:
         info += f' | Прогресс: {get_exercise_progress_percentage(exercise, excess=True):g}%'  #
     return info
@@ -82,7 +104,12 @@ def show_all_challenges(chat_id: int, action: str):
 
         description = '\n' + challenge.description if challenge.description else ''
         for exercise in exercises:
-            exercises_info += f'*{exercise.name}*: {exercise.amount}  {exercise.get_measurement_display()}\n'
+            if exercise.measurement == 'minutes':
+                amount = exercise.amount / 60
+            else:
+                amount = exercise.amount
+
+            exercises_info += f'*{exercise.name}*: {amount:g}  {exercise.get_measurement_display()}\n'
         challenge_info = f'*{challenge.name}*' \
                          f'`{description}`' \
                          f'\n\n{exercises_info}' \
