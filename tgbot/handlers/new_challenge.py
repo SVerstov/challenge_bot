@@ -2,7 +2,8 @@ from telebot import types
 from telebot.handler_backends import State, StatesGroup
 
 from server.models import ExercisesAll, Challenges, ExerciseSet
-from tgbot.keyboards.user_create_kb import get_exercises_kb, offer_to_finish, miss_description_kb
+from tgbot.keyboards.exercises_kb import get_exercises_kb
+from tgbot.keyboards.challenges_kb import miss_description_kb, offer_to_finish
 from tgbot.keyboards import get_markup_kb
 from tgbot.create_bot import bot
 

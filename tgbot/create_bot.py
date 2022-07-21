@@ -6,7 +6,6 @@ import telebot.types
 from telebot import StateMemoryStorage, TeleBot, custom_filters, logger
 from telebot import apihelper
 
-
 # todo вынести настройки отдельно
 
 apihelper.ENABLE_MIDDLEWARE = True
@@ -30,7 +29,6 @@ bot.add_custom_filter(custom_filters.StateFilter(bot))
 bot.add_custom_filter(custom_filters.TextMatchFilter())
 bot.add_custom_filter(custom_filters.IsDigitFilter())
 
-
 # COMMANDS
 list_of_commands: Dict[str, Dict[str, str]] = {
     'ru': {
@@ -39,15 +37,14 @@ list_of_commands: Dict[str, Dict[str, str]] = {
         'accept': 'Запустить челлендж! 🚀',
         'new_exercise': 'Создать новое упражнение 🏃',
         'new_challenge': 'Создать новый челлендж!🏋🏼‍♂',
-        'cansel': 'Отменить текущее действие',
+        'cansel': 'Отменить текущее действие ⛔',
+        'set_timezone': 'Настроить часовой пояс 🕔',
+        'delete_exercise': 'Удалить упражнение ❌',
+        'delete_challenge': 'Удалить челлендж 🚫',
     },
-    'en': {
-        'start': 'Start django bot 🚀',
-        'stats': 'Statistics of bot 📊',
-        # TODO заполнить
+}
+list_of_commands['en'] = list_of_commands['ru'] #todo мультиязычное меню
 
-}
-}
 
 def set_up_commands(telegram_id: int, language_code: str) -> None:
     if language_code in ['ukr', 'bel']:

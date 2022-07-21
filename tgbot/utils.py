@@ -1,11 +1,12 @@
 import datetime
-import random
 
 from telebot import types
 
-from server.models import User, AcceptedExerciseSet
-from django.db.models import F
+from server.models import AcceptedExerciseSet, Challenges, ExerciseSet
+from django.db.models import F, Q
 from server.models import User
+from tgbot.create_bot import bot
+from tgbot.keyboards.challenges_kb import get_pick_challenge_kb, get_delete_challenge_kb
 
 
 def get_or_save_user(message: types.Message) -> User:
@@ -28,11 +29,6 @@ def create_user(message):
                                last_name=last_name,
                                language_code=language_code)
     return user
-
-
-def get_cool_smile():
-    smile_list = '😎 👊🏼 👍🏻 💪 🏋🏼‍♂️ 🤸🏽‍♀️ 🥊 🦾 🤺 ⚔️'
-    return random.choice(smile_list.split())
 
 
 def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = True, percent: bool = False) -> str:
@@ -65,3 +61,35 @@ def is_challenge_finished(user):
     if not unfinished_exercises:
         return True
     return False
+
+
+def show_all_challenges(chat_id: int, action: str):
+    """ Shows all challenges
+     :param action 'pick' or 'delete'
+     """
+    if action not in ('pick', 'delete'):
+        raise AttributeError('param "action must be "pick" or "delete"')
+
+    if action == 'pick':
+        challenge_list = Challenges.objects.filter(Q(owner_id=chat_id) | Q(for_all=True))
+    else:
+        challenge_list = Challenges.objects.filter(owner_id=chat_id)
+
+    exercise_list = ExerciseSet.objects.all()
+    for challenge in challenge_list:
+        exercises = exercise_list.filter(challenge_id=challenge.id)
+        exercises_info = ''
+
+        description = '\n' + challenge.description if challenge.description else ''
+        for exercise in exercises:
+            exercises_info += f'*{exercise.name}*: {exercise.amount}  {exercise.get_measurement_display()}\n'
+        challenge_info = f'*{challenge.name}*' \
+                         f'`{description}`' \
+                         f'\n\n{exercises_info}' \
+                         f'\nДлительность челленджа: *{challenge.duration}* дней'
+        # todo ДЕНЬ ДНЯ ДНЕЙ - в зависимости от числа
+        if action == 'pick':
+            kb = get_pick_challenge_kb(challenge.name, challenge.id)
+        else:
+            kb = get_delete_challenge_kb(challenge.name, challenge.id)
+        bot.send_message(chat_id, challenge_info, reply_markup=kb)

@@ -2,7 +2,7 @@ from telebot import types
 from telebot.handler_backends import State, StatesGroup
 
 from server.models import ExercisesAll
-from tgbot.keyboards.user_create_kb import measurement_kb
+from tgbot.keyboards.challenges_kb import measurement_kb
 from tgbot.create_bot import bot
 
 
