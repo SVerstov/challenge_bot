@@ -52,7 +52,7 @@ def start_challenge(message: types.Message):
 @bot.callback_query_handler(func=lambda c: c.data == 'reset_challenge', state=AcceptChallengeState.choose)
 def cansel_challenge(call: types.CallbackQuery):
     chat_id = call.from_user.id
-    user = get_or_save_user(call)
+    user = get_or_save_user(call.message)
     user.challenge_accepted.delete()
     bot.answer_callback_query(call.id)
     bot.send_message(chat_id, 'Прогресс сброшен!')
@@ -61,7 +61,7 @@ def cansel_challenge(call: types.CallbackQuery):
 @bot.callback_query_handler(func=lambda c: True, state=AcceptChallengeState.choose)
 def save_accepted_challenge(call: types.CallbackQuery):
     chat_id = call.message.chat.id
-    user = get_or_save_user(call)
+    user = get_or_save_user(call.message)
 
     challenge = Challenges.objects.get(pk=int(call.data))
     kwargs = model_to_dict(challenge, exclude=['id', 'owner', 'for_all'])

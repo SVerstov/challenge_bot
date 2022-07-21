@@ -19,10 +19,10 @@ def cansel(message: types.Message):
 
 
 # all commands must reset bot state
-@bot.middleware_handler(update_types=['message'])
-def middleware_test(bot_instance, message):
-    if message.text.startswith('/') and not message.text == '/cansel':
-        bot.delete_state(message.from_user.id)
+# @bot.middleware_handler(update_types=['message'])
+# def middleware_test(bot_instance, message):
+#     if message.text.startswith('/') and not message.text == '/cansel':
+#         bot.delete_state(message.from_user.id)
 
 
 @bot.message_handler(commands=['start'])

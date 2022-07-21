@@ -4,10 +4,12 @@ import random
 from telebot import types
 
 from server.models import User, AcceptedExerciseSet
+from django.db.models import F
+from server.models import User
 
 
 def get_or_save_user(message: types.Message) -> User:
-    telegram_id = message.from_user.id
+    telegram_id = message.chat.id
     user = User.objects.filter(telegram_id=telegram_id).first()
     if not user:
         user = create_user(message)
@@ -39,7 +41,6 @@ def get_exercise_progress_info(exercise: AcceptedExerciseSet, today: bool = True
     if today:
         info += f' | Сегодня: {exercise.progress_on_last_day: g}'
     if percent:
-
         info += f' | Прогресс: {get_exercise_progress_percentage(exercise, excess=True):g}%'  #
     return info
 
@@ -57,3 +58,10 @@ def get_today_date(timezone: int):
     offset = datetime.timedelta(hours=timezone)
     tz = datetime.timezone(offset, name='тест')
     return datetime.datetime.now(tz=tz).date()
+
+
+def is_challenge_finished(user):
+    unfinished_exercises = user.challenge_accepted.acceptedexerciseset_set.filter(progress__lt=F('amount'))
+    if not unfinished_exercises:
+        return True
+    return False
