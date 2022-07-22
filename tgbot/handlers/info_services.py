@@ -2,7 +2,7 @@ from telebot.custom_filters import TextFilter
 
 from tgbot.settings import start_message
 from tgbot.utils import get_or_save_user, get_today_date, get_exercise_progress_info, get_exercise_progress_percentage, \
-    set_up_commands
+    set_up_commands, get_form_of_day
 from tgbot.create_bot import bot
 from server.models import User
 from telebot import types
@@ -61,7 +61,7 @@ def make_info_text(user: User) -> str:
 
     overall_progress = round(sum(list_of_progress) / len(list_of_progress), 1)
 
-    common_info = f'*{challenge_name}* ({duration} дней)\n\n' \
+    common_info = f'*{challenge_name}* ({duration} {get_form_of_day(duration)})\n\n' \
                   f'Дата старта: {date_start.strftime("%d.%m.%y")}\n' \
                   f'Дата окончания: {date_end.strftime("%d.%m.%y")} \n\n' \
                   f'Сегодня *{number_of_today}* день. \n' \

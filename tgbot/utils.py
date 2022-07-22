@@ -115,10 +115,11 @@ def show_all_challenges(chat_id: int, action: str):
                 amount = exercise.amount
 
             exercises_info += f'*{exercise.name}*: {amount:g}  {exercise.get_measurement_display()}\n'
+        duration = challenge.duration
         challenge_info = f'*{challenge.name}*' \
                          f'`{description}`' \
                          f'\n\n{exercises_info}' \
-                         f'\nДлительность челленджа: *{challenge.duration}* дней'
+                         f'\nДлительность челленджа: *{duration}*  {get_form_of_day(duration)}'
         # todo ДЕНЬ ДНЯ ДНЕЙ - в зависимости от числа
         if action == 'pick':
             kb = get_pick_challenge_kb(challenge.name, challenge.id)
@@ -147,3 +148,13 @@ def delete_object(chat_id, object):
     object_name = object.name
     object.delete()
     bot.send_message(chat_id, f'{object_name}- удалено 🚫')
+
+
+def get_form_of_day(num):
+    if num % 10 == 1:
+        return 'день'
+    elif num % 10 in (2, 3, 4):
+        return 'дня'
+    else:
+        return 'дней'
+

@@ -5,7 +5,7 @@ from server.models import ExercisesAll, Challenges, ExerciseSet
 from tgbot.keyboards.exercises_kb import get_exercises_kb
 from tgbot.keyboards.challenges_kb import miss_description_kb, offer_to_finish
 from tgbot.create_bot import bot
-from tgbot.utils import get_exercise_list_as_text
+from tgbot.utils import get_exercise_list_as_text, get_form_of_day
 
 
 class NewChallengeState(StatesGroup):
@@ -98,10 +98,11 @@ def save_exercise(message: types.Message):
 
         # make a clear string for response
         if data['added_exercises']:
+            duration = data["duration"]
             exercises_info = '\n'.join(
                 [f'*{x[0].name}*:  {x[1]} {(x[0].get_measurement_display())}' for x in
                  data['added_exercises'].values()]) \
-                             + f'\n\n Длительность челленджа: {data["duration"]} дней' \
+                             + f'\n\n Длительность челленджа: {duration}  {get_form_of_day(duration)}' \
                                f'\n`Чтобы отредактировать упражнение, выберите его повторно.`' \
                                f'\n`Для удаления упражнения, установите количество равным 0. `'
 
@@ -122,13 +123,13 @@ def save_exercise(message: types.Message):
 def exercise_chosen(call: types.CallbackQuery):
     chat_id = call.message.chat.id
     if call.data == 'add_exercise':
-        bot.answer_callback_query(call.id)
         show_exercise_kb(chat_id)
     elif call.data == 'finish':
         with bot.retrieve_data(chat_id) as data:
             save_new_challenge(data)
             bot.send_message(chat_id, f'Новый Челлендж \'{data["name"]}\' сохранён!')
         bot.delete_state(chat_id)
+    bot.answer_callback_query(call.id)
 
 
 def is_positive_integer(text: str) -> bool:

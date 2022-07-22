@@ -41,5 +41,5 @@ measurement_kb.row(
 offer_to_finish = types.InlineKeyboardMarkup()
 offer_to_finish.row(
     Ibtn('Добавить упражнение 💪', callback_data='add_exercise'),
-    Ibtn('Завершить 🏆', callback_data='finish'),
+    Ibtn('Сохранить 💾', callback_data='finish'),
 )
