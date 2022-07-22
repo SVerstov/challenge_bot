@@ -27,7 +27,8 @@ def show_all_exercises_counter(message: types.Message):
         bot.send_message(chat_id, user.challenge_accepted.name)
         for exercise in exercises:
             kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
-            bot.send_message(chat_id, get_exercise_progress_info(exercise, today=True), reply_markup=kb)
+            msg = get_exercise_progress_info(exercise, today=True, timezone=user.time_zone)
+            bot.send_message(chat_id, msg, reply_markup=kb)
         bot.set_state(chat_id, state=CounterState.counter_on)
         bot.add_data(chat_id, exercises=exercises, timezone=user.time_zone)
 
@@ -38,7 +39,7 @@ def show_all_exercises_counter(message: types.Message):
 
 
 @bot.callback_query_handler(func=lambda c: True, state=[CounterState.counter_on, CounterState.enter_custom_value])
-def accounting(call: types.CallbackQuery):  # todo переоткрытие счетчиков,если сообщение висит >48 часов
+def accounting(call: types.CallbackQuery):
     chat_id = call.message.chat.id
     exercise_id = int(call.data.split()[0])
     value = call.data.split()[1]
@@ -50,7 +51,11 @@ def accounting(call: types.CallbackQuery):  # todo переоткрытие сч
 
     if value == 'another':
         # Enter custom value
-        bot.send_message(chat_id, f'({exercise.name}) Введите число:')
+        if exercise.measurement == 'minutes':
+            msg = f'({exercise.name}) Введите количество секунд:'
+        else:
+            msg = f'({exercise.name}) Введите число:'
+        bot.send_message(chat_id, msg)
         bot.set_state(chat_id, state=CounterState.enter_custom_value)
         bot.add_data(chat_id, exercise=exercise, message_to_edit_id=call.message.id)
         bot.answer_callback_query(call.id)
@@ -66,7 +71,8 @@ def accounting(call: types.CallbackQuery):  # todo переоткрытие сч
 
         kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
         try:
-            bot.edit_message_text(get_exercise_progress_info(exercise, today=True),
+            msg = get_exercise_progress_info(exercise, today=True, timezone=timezone)
+            bot.edit_message_text(msg,
                                   chat_id=call.message.chat.id,
                                   message_id=call.message.id,
                                   reply_markup=kb)
@@ -79,7 +85,6 @@ def accounting(call: types.CallbackQuery):  # todo переоткрытие сч
         bot.answer_callback_query(call.id, f'{exercise.name} {sign}{delta:g}')
         if exercise.progress >= exercise.amount:
             finish_check(call.message)
-            bot.edit_message_text()
 
 
 @bot.message_handler(state=CounterState.enter_custom_value)
@@ -99,8 +104,8 @@ def enter_custom_value(message: types.Message):
 
     save_exercise_progress(exercise, delta, timezone)
 
-    reply_msg = get_exercise_progress_info(exercise, today=True)
-    kb = get_counter_kb(exercise.id)
+    reply_msg = get_exercise_progress_info(exercise, today=True, timezone=timezone)
+    kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
     bot.edit_message_text(reply_msg, chat_id=chat_id, message_id=message_to_edit_id, reply_markup=kb)
     bot.send_message(chat_id, f'Учтено!\n{reply_msg}', reply_markup=counter_stats_kb)
     bot.set_state(chat_id, CounterState.enter_custom_value)

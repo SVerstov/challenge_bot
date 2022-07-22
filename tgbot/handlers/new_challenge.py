@@ -5,6 +5,7 @@ from server.models import ExercisesAll, Challenges, ExerciseSet
 from tgbot.keyboards.exercises_kb import get_exercises_kb
 from tgbot.keyboards.challenges_kb import miss_description_kb, offer_to_finish
 from tgbot.create_bot import bot
+from tgbot.utils import get_exercise_list_as_text
 
 
 class NewChallengeState(StatesGroup):
@@ -19,11 +20,18 @@ class NewChallengeState(StatesGroup):
 @bot.message_handler(commands=['new_challenge'])
 def set_challenge_name(message: types.Message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, "Создаём новый спортивный челлендж!\n Введите его название:")
+    list_of_exercises_name = get_exercise_list_as_text(chat_id)
+
+    bot.send_message(chat_id,
+                     f"<b>Cписок доступных упражнений:</b>\n"
+                     f"{list_of_exercises_name}"
+                     f"\n\nЕсли нужного упражнения нет - сперва создайте его /new_exercise",
+                     parse_mode='html')
+
+    bot.send_message(chat_id, 'Создаём новый спортивный челлендж!\n Введите его название:')
     bot.set_state(chat_id, NewChallengeState.name)
     bot.add_data(chat_id, owner=chat_id)
     bot.add_data(chat_id, added_exercises={})
-    # TODO проверка-что такое упражнение уже есть
 
 
 @bot.message_handler(state=NewChallengeState.name)

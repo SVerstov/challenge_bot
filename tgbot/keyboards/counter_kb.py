@@ -8,7 +8,7 @@ from tgbot.create_bot import bot
 
 def get_counter_kb(exercise_id, measerment: str = 'numbers'):
     accounting_kb = types.InlineKeyboardMarkup()
-    accounting_kb.max_row_keys = 6
+    accounting_kb.max_row_keys = 8
     keys = [Ibtn(text, callback_data=f'{exercise_id} {callback}') for text, callback in counter_set[measerment].items()]
     keys.append(Ibtn('Своё', callback_data=f'{exercise_id} another'))
 

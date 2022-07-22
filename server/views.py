@@ -1,7 +1,6 @@
-import json
 import telebot
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from tgbot.create_bot import bot
 

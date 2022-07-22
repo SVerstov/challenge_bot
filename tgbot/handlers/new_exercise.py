@@ -4,6 +4,7 @@ from telebot.handler_backends import State, StatesGroup
 from server.models import ExercisesAll
 from tgbot.keyboards.challenges_kb import measurement_kb
 from tgbot.create_bot import bot
+from tgbot.utils import get_exercise_list_as_text
 
 
 class AddExerciseState(StatesGroup):
@@ -14,11 +15,15 @@ class AddExerciseState(StatesGroup):
 @bot.message_handler(commands=['new_exercise'], state='*')
 def new_exercise_name(message: types.Message):
     chat_id = message.chat.id
+    list_of_exercises_name = get_exercise_list_as_text(chat_id)
+
+    bot.send_message(chat_id, f"*Cписок доступных упражнений*:\n"
+                              f"{list_of_exercises_name}")
+
     bot.reset_data(chat_id)
     bot.send_message(chat_id, "Создаём новое упражнение!\n Введите его название:")
     bot.set_state(chat_id, AddExerciseState.description)
     bot.add_data(chat_id, owner_id=chat_id)
-    # TODO проверка, что упражнение уже есть
 
 
 @bot.message_handler(state=AddExerciseState.description)
@@ -43,5 +48,3 @@ def new_exercise_save(call: types.CallbackQuery):
 def save_new_exercise(data: dict):
     """ use data: owner_id, name, measurement """
     return ExercisesAll.objects.create(**data)
-
-

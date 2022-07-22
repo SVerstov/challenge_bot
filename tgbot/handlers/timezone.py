@@ -21,12 +21,17 @@ def send_help_info(message: types.Message):
                               f"Выберите часовой пояс:", reply_markup=timezone_kb)
 
 
-@bot.callback_query_handler(func=lambda c: int(c.data) in range(-11, 13), state=TimeZoneState.set_timezone)
+@bot.callback_query_handler(func=lambda c: True, state=TimeZoneState.set_timezone)
 def timezone_selected(call: types.CallbackQuery):
-    chat_id = call.message.chat.id
-    user = get_or_save_user(call.message)
-    user.time_zone = int(call.data)
-    user.save()
+    try:
+        tz = int(call.data)
+    except ValueError:
+        return
+    if tz in range(-11, 13):
+        chat_id = call.message.chat.id
+        user = get_or_save_user(call.message)
+        user.time_zone = int(call.data)
+        user.save()
 
     tz = user.time_zone
     sign = '+' if tz > 0 else ''

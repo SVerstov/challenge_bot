@@ -1,7 +1,9 @@
 from telebot.custom_filters import TextFilter
 
-from tgbot.utils import get_or_save_user, get_today_date, get_exercise_progress_info, get_exercise_progress_percentage
-from tgbot.create_bot import bot, set_up_commands
+from tgbot.settings import start_message
+from tgbot.utils import get_or_save_user, get_today_date, get_exercise_progress_info, get_exercise_progress_percentage, \
+    set_up_commands
+from tgbot.create_bot import bot
 from server.models import User
 from telebot import types
 from datetime import timedelta
@@ -18,25 +20,12 @@ def cansel(message: types.Message):
         bot.send_message(chat_id, "Нечего отменять")
 
 
-# all commands must reset bot state
-# @bot.middleware_handler(update_types=['message'])
-# def middleware_test(bot_instance, message):
-#     if message.text.startswith('/') and not message.text == '/cansel':
-#         bot.delete_state(message.from_user.id)
-
-
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def start_info(message: types.Message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, 'Стартанули)!')
+    bot.send_message(chat_id, start_message)
     set_up_commands(telegram_id=message.from_user.id, language_code=message.from_user.language_code)
     get_or_save_user(message)
-
-
-@bot.message_handler(commands=['help'])
-def send_help_info(message: types.Message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "I'll help you... later")
 
 
 @bot.message_handler(text=TextFilter(starts_with='/stats', ignore_case=True), state='*')
