@@ -23,7 +23,7 @@ def cansel(message: types.Message):
 @bot.message_handler(commands=['start', 'help'])
 def start_info(message: types.Message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, start_message)
+    bot.send_message(chat_id, start_message, parse_mode='Html')
     set_up_commands(telegram_id=message.from_user.id, language_code=message.from_user.language_code)
     get_or_save_user(message)
 

@@ -1,0 +1,15 @@
+version: "3"
+services:
+  backend:
+    build: .
+    restart: always
+    command: gunicorn --bind 0.0.0.0:8000 challenge_bot.wsgi
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+  db:
+    restart: always
+    image: postgres:12.4-alpine
+    env_file:
+      - .env

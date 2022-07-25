@@ -102,7 +102,7 @@ def show_all_challenges(chat_id: int, action: str):
     else:
         challenge_list = Challenges.objects.filter(owner_id=chat_id)
 
-    exercise_list = ExerciseSet.objects.all()
+    exercise_list = ExerciseSet.objects.filter(challenge__in=challenge_list)
     for challenge in challenge_list:
         exercises = exercise_list.filter(challenge_id=challenge.id)
         exercises_info = ''
@@ -120,7 +120,7 @@ def show_all_challenges(chat_id: int, action: str):
                          f'`{description}`' \
                          f'\n\n{exercises_info}' \
                          f'\nДлительность челленджа: *{duration}*  {get_form_of_day(duration)}'
-        # todo ДЕНЬ ДНЯ ДНЕЙ - в зависимости от числа
+
         if action == 'pick':
             kb = get_pick_challenge_kb(challenge.name, challenge.id)
         else:
