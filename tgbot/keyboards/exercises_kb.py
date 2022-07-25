@@ -10,7 +10,7 @@ def get_exercises_kb(telegram_id: int, for_all=True) -> types.InlineKeyboardMark
     else:
         exercises = ExercisesAll.objects.filter(owner_id=telegram_id)
     user_exercises_kb = types.InlineKeyboardMarkup()
-    user_exercises_kb.max_row_keys = 3
+    user_exercises_kb.max_row_keys = 2
     exercise_btns = [Ibtn(exercises.name, callback_data=exercises.id) for exercises in exercises]
     user_exercises_kb.row(*exercise_btns)
     return user_exercises_kb
