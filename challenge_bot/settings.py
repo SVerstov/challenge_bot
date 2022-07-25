@@ -28,8 +28,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(' ')
-CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split()
+CSRF_TRUSTED_ORIGINS = os.environ['CSRF_TRUSTED_ORIGINS'].split()
 # Application definition
 # AUTH_USER_MODEL = 'server.User'
 
