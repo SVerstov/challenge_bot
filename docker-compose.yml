@@ -1,5 +1,6 @@
 version: "3"
 services:
+
   backend:
     build: .
     restart: always
@@ -9,19 +10,14 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - postgres-data:/var/lib/postgresql
-
+      - ./static:/app/static
   db:
     restart: always
     image: postgres:12.4-alpine
     env_file:
       - .env
-    volumes:
-      - static-data:/static
 
 
-volumes:
-  postgres-data:
-    driver: local
-  static-data:
-    driver: local
+
+
+
