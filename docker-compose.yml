@@ -8,8 +8,20 @@ services:
       - .env
     ports:
       - 8000:8000
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
   db:
     restart: always
     image: postgres:12.4-alpine
     env_file:
       - .env
+    volumes:
+      - static-data:/static
+
+
+volumes:
+  postgres-data:
+    driver: local
+  static-data:
+    driver: local
