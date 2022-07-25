@@ -29,6 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(' ')
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
 # Application definition
 # AUTH_USER_MODEL = 'server.User'
 
