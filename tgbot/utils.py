@@ -135,7 +135,7 @@ def show_all_challenges(chat_id: int, action: str):
 
 def get_exercise_list_as_text(chat_id: int) -> str:
     exercises = ExercisesAll.objects.filter(Q(owner_id=chat_id) | Q(for_all=True))
-    return '\n'.join(set(exercise.name for exercise in exercises))
+    return '\n'.join(exercise.name for exercise in exercises)
 
 
 def set_up_commands(telegram_id: int, language_code: str) -> None:

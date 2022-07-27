@@ -22,6 +22,7 @@ class User(models.Model):
 class BaseExercise(models.Model):
     class Meta:
         abstract = True
+        ordering = ['pk']
 
     MEASUREMENTS = [
         ('numbers', 'Шт'),
@@ -58,6 +59,7 @@ class AcceptedExerciseSet(BaseExercise):
 class BaseChallenges(models.Model):
     class Meta:
         abstract = True
+        ordering = ['pk']
 
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30)
