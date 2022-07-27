@@ -1,0 +1,7 @@
+.git
+.idea
+
+Dockerfile
+docker-compose.yml
+
+static

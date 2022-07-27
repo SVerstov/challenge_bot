@@ -5,15 +5,12 @@ from telebot.handler_backends import State, StatesGroup
 
 from tgbot.keyboards.counter_kb import get_counter_kb, counter_stats_kb
 from tgbot.create_bot import bot
-from tgbot.utils import get_or_save_user, get_exercise_progress_info
-from datetime import date
+from tgbot.utils import get_or_save_user, get_exercise_progress_info, get_timezone, finish_check
 from server.models import AcceptedExerciseSet
-from tgbot.utils import get_today_date, is_challenge_finished
-from tgbot.handlers.info_services import show_info
+from tgbot.utils import get_today_date
 
 
 class CounterState(StatesGroup):
-    counter_on = State()
     enter_custom_value = State()
 
 
@@ -29,8 +26,7 @@ def show_all_exercises_counter(message: types.Message):
             kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
             msg = get_exercise_progress_info(exercise, today=True, timezone=user.time_zone)
             bot.send_message(chat_id, msg, reply_markup=kb)
-        bot.set_state(chat_id, state=CounterState.counter_on)
-        bot.add_data(chat_id, exercises=exercises, timezone=user.time_zone)
+        bot.add_data(chat_id, timezone=user.time_zone)
 
 
     else:
@@ -38,16 +34,15 @@ def show_all_exercises_counter(message: types.Message):
                                   'Используйте команду /accept')
 
 
-@bot.callback_query_handler(func=lambda c: True, state=[CounterState.counter_on, CounterState.enter_custom_value])
+@bot.callback_query_handler(func=lambda c: c.data.startswith('counter'))
 def accounting(call: types.CallbackQuery):
+    """ handling pressing on special counter keyboard учёт выполнения упражнений """
     chat_id = call.message.chat.id
-    exercise_id = int(call.data.split()[0])
-    value = call.data.split()[1]
-    with bot.retrieve_data(chat_id) as data:
-        exercises = data.get('exercises')
+    exercise_id = int(call.data.split()[1])
+    value = call.data.split()[2]
 
-        exercise = exercises.get(id=exercise_id)
-        exercise: AcceptedExerciseSet
+    exercise = AcceptedExerciseSet.objects.get(id=exercise_id)
+    timezone = get_timezone(chat_id)
 
     if value == 'another':
         # Enter custom value
@@ -57,7 +52,7 @@ def accounting(call: types.CallbackQuery):
             msg = f'({exercise.name}) Введите число:'
         bot.send_message(chat_id, msg)
         bot.set_state(chat_id, state=CounterState.enter_custom_value)
-        bot.add_data(chat_id, exercise=exercise, message_to_edit_id=call.message.id)
+        bot.add_data(chat_id, exercise=exercise, message_to_edit_id=call.message.id, timezone=timezone)
         bot.answer_callback_query(call.id)
     else:
         # get value from button, increase progress
@@ -66,30 +61,31 @@ def accounting(call: types.CallbackQuery):
         except ValueError:
             return
 
-        timezone = data.get('timezone')
         save_exercise_progress(exercise, delta, timezone=timezone)
 
         kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
+
         try:
+            # display new info on counter
             msg = get_exercise_progress_info(exercise, today=True, timezone=timezone)
             bot.edit_message_text(msg,
                                   chat_id=call.message.chat.id,
                                   message_id=call.message.id,
                                   reply_markup=kb)
         except ApiTelegramException:
-            # show new counter if edited message is too old
+            # show new counter if message is too old to edit
             bot.send_message(chat_id, '🔽🔻🔽🔻🔽🔻Пересоздаю клавиатуру🔻🔽🔻🔽🔻🔽\nПоследнее нажатие было учтено!')
             show_all_exercises_counter(call.message)
 
         sign = '+' if delta >= 0 else '-'
         bot.answer_callback_query(call.id, f'{exercise.name} {sign}{delta:g}')
         if exercise.progress >= exercise.amount:
-            finish_check(call.message)
+            finish_check(chat_id)
 
 
 @bot.message_handler(state=CounterState.enter_custom_value)
 def enter_custom_value(message: types.Message):
-    """ Get an number from user. increase user progress """
+    """ Get a number from user. increase user progress """
     chat_id = message.chat.id
     try:
         delta = float(message.text)
@@ -100,7 +96,7 @@ def enter_custom_value(message: types.Message):
     with bot.retrieve_data(chat_id) as data:
         exercise = data.get('exercise')
         message_to_edit_id = data.get('message_to_edit_id')
-        timezone = data.get('timezone')
+    timezone = get_timezone(chat_id)
 
     save_exercise_progress(exercise, delta, timezone)
 
@@ -122,13 +118,3 @@ def save_exercise_progress(exercise: AcceptedExerciseSet, delta: float, timezone
         exercise.progress_on_last_day = delta
         exercise.last_day = today
     exercise.save()
-
-
-def finish_check(message: types.Message):
-    user = get_or_save_user(message)
-    if is_challenge_finished(user):
-        chat_id = message.chat.id
-        show_info(message)
-        bot.send_message(chat_id, f'😎 Вы террррминаторрр! Челенж пройден 🏋🏼‍♂️')
-        user.challenge_accepted.delete()
-        bot.delete_state(chat_id)
