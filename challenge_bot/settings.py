@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
+
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(Path(BASE_DIR, '.env'))
 
@@ -33,7 +36,7 @@ CSRF_TRUSTED_ORIGINS = os.environ['CSRF_TRUSTED_ORIGINS'].split()
 # Application definition
 # AUTH_USER_MODEL = 'server.User'
 
-logging.basicConfig(level=logging.ERROR)
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',

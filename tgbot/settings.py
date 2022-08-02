@@ -1,19 +1,22 @@
 from typing import Dict
 import telebot
-# from telebot import apihelper, logger
 import logging
 
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 
 # LOGGER
+logging.basicConfig(level='WARNING',
+                    filename='logfile.log',
+                    format=r"%(asctime)s [%(levelname)s] %(message)s",
+                    encoding='utf-8')
+
 logger = telebot.logger
-logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
+logger.setLevel(logging.WARNING)
 
 
 class ExceptionHandler(telebot.ExceptionHandler):
     def handle(self, exception):
-        logger.error(exception)
-
+        logger.warning(exception)
 
 
 counter_set = {

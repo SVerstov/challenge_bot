@@ -1,7 +1,6 @@
 from django.apps import AppConfig
 import logging
-import sys
-from telebot import logger as tlogger
+
 
 
 class ServerConfig(AppConfig):
