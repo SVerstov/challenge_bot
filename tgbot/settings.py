@@ -15,6 +15,7 @@ class ExceptionHandler(telebot.ExceptionHandler):
         logger.error(exception)
 
 
+
 counter_set = {
     'numbers': {
         '-1': -1,
