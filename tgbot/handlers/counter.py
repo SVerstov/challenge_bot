@@ -26,7 +26,7 @@ def show_all_exercises_counter(message: types.Message):
             kb = get_counter_kb(exercise.id, measerment=exercise.measurement)
             msg = get_exercise_progress_info(exercise, today=True, timezone=user.time_zone)
             bot.send_message(chat_id, msg, reply_markup=kb)
-        bot.add_data(chat_id, timezone=user.time_zone)
+
 
 
     else:
